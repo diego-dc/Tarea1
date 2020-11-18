@@ -8,6 +8,7 @@ from OpenGL.GL import *
 import glfw
 import numpy as np
 import sys
+import python_simulador
 
 import transformations as tr
 import easy_shaders as es
@@ -446,7 +447,7 @@ import random
     
 class nubes(object):
     def __init__(self):
-        gpuCuadradoBlanco = es.toGPUShape(bs.createColorQuad(1,1,1))
+        gpuCuadradoBlanco = es.toGPUShape(bs.createTextureQuad("images/nube.jpg"), GL_CLAMP_TO_EDGE, GL_NEAREST)
         
         nube = sg.SceneGraphNode("nube")
         nube.transform = tr.scale(0.2, 0.15 ,1) #0.2, 0.15,1
@@ -466,9 +467,13 @@ class nubes(object):
         self.descender = False
         
         
-    def draw(self, pipeline):
+    def draw(self, pipeline, texturePipeline):
         self.model.transform = tr.translate(self.pos_x, self.pos_y + self.pos_y_random, 0)
-        sg.drawSceneGraphNode(self.model, pipeline, "transform")
+        pipelineTexture = es.SimpleTextureTransformShaderProgram()
+        glUseProgram(pipelineTexture.shaderProgram)
+        sg.drawSceneGraphNode(self.model, pipelineTexture, "transform")
+        pipeline = es.SimpleTransformShaderProgram()
+        glUseProgram(pipeline.shaderProgram)
     
     # Le asignamos un dt para que sea posible su desplazamiento
     def update_x(self, dt):
@@ -505,9 +510,9 @@ class createNubes(object):
                 self.creador_nubes.append(nubes())
                 
                 
-    def draw(self, pipeline):
+    def draw(self, pipeline, pipelineTexture):
         for j in self.creador_nubes:
-            j.draw(pipeline)
+            j.draw(pipeline, pipelineTexture)
                
     def clean(self):
         x = 0
@@ -536,22 +541,22 @@ class createNubes(object):
             j.update_x(dt)
             j.update_y()
             
-    def DrawMoving_x(self, pipeline, dt):
+    def DrawMoving_x(self, pipeline, pipelineTexture, dt):
         self.pos_inicial()
         self.update(dt)
-        self.draw(pipeline)
+        self.draw(pipeline, pipelineTexture)
         self.clean()
  
         
-    def DrawMovingUp_x_y(self, pipeline, dt):
+    def DrawMovingUp_x_y(self, pipeline, pipelineTexture, dt):
         self.update_elevar()
         self.update(dt)
-        self.draw(pipeline)
+        self.draw(pipeline, pipelineTexture)
         
-    def DrawMovingDown_x_y(self, pipeline, dt):
+    def DrawMovingDown_x_y(self, pipeline, pipelineTexture, dt):
         self.update_descender()
         self.update(dt)
-        self.draw(pipeline)
+        self.draw(pipeline, pipelineTexture)
 
 
 # Creamos el objeto de las montañas con nieve.
